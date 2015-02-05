@@ -1,3 +1,4 @@
+#include <c_types.h>
 #include "httpdconfig.h"
 #ifdef EFS_HEATSHRINK
 //Stupid wrapper so we don't have to move c-files around
@@ -9,7 +10,6 @@
 #define _STDINT_H
 
 #include "espmissingincludes.h"
-#include "c_types.h"
 #include "mem.h"
 #include "osapi.h"
 #include "heatshrink_config_httpd.h"

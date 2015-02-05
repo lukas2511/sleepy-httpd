@@ -3,9 +3,9 @@
 /*
  * ----------------------------------------------------------------------------
  * "THE BEER-WARE LICENSE" (Revision 42):
- * Jeroen Domburg <jeroen@spritesmods.com> wrote this file. As long as you retain 
- * this notice you can do whatever you want with this stuff. If we meet some day, 
- * and you think this stuff is worth it, you can buy me a beer in return. 
+ * Jeroen Domburg <jeroen@spritesmods.com> wrote this file. As long as you retain
+ * this notice you can do whatever you want with this stuff. If we meet some day,
+ * and you think this stuff is worth it, you can buy me a beer in return.
  * ----------------------------------------------------------------------------
  */
 
@@ -20,6 +20,7 @@
 #include "cgiwifi.h"
 #include "stdout.h"
 #include "auth.h"
+#include "user_interface.h"
 
 //Function that tells the authentication system what users/passwords live on the system.
 //This is disabled in the default build; if you want to try it, enable the authBasic line in
@@ -27,7 +28,7 @@
 int myPassFn(HttpdConnData *connData, int no, char *user, int userLen, char *pass, int passLen) {
 	if (no==0) {
 		os_strcpy(user, "admin");
-		os_strcpy(pass, "s3cr3t");
+		os_strcpy(pass, "1337s3cr3t");
 		return 1;
 //Add more users this way. Check against incrementing no for each user added.
 //	} else if (no==1) {
@@ -50,17 +51,9 @@ general ones. Authorization things (like authBasic) act as a 'barrier' and
 should be placed above the URLs they protect.
 */
 HttpdBuiltInUrl builtInUrls[]={
-	{"/", cgiRedirect, "/index.tpl"},
-	{"/flash.bin", cgiReadFlash, NULL},
-	{"/led.tpl", cgiEspFsTemplate, tplLed},
-	{"/index.tpl", cgiEspFsTemplate, tplCounter},
-	{"/led.cgi", cgiLed, NULL},
+	{"/", cgiRedirect, "/index.html"},
 
-	//Routines to make the /wifi URL and everything beneath it work.
-
-//Enable the line below to protect the WiFi configuration with an username/password combo.
-//	{"/wifi/*", authBasic, myPassFn},
-
+	{"/wifi/*", authBasic, myPassFn},
 	{"/wifi", cgiRedirect, "/wifi/wifi.tpl"},
 	{"/wifi/", cgiRedirect, "/wifi/wifi.tpl"},
 	{"/wifi/wifiscan.cgi", cgiWiFiScan, NULL},
@@ -72,11 +65,22 @@ HttpdBuiltInUrl builtInUrls[]={
 	{NULL, NULL, NULL}
 };
 
+static void ICACHE_FLASH_ATTR some_timerfunc(void *arg)
+{
+	os_printf("\nSleeeeeeep!!11\n");
+  system_deep_sleep(0); // sleep forever
+}
 
 //Main routine. Initialize stdout, the I/O and the webserver and we're done.
-void user_init(void) {
+void ICACHE_FLASH_ATTR user_init(void) {
 	stdoutInit();
 	ioInit();
 	httpdInit(builtInUrls, 80);
 	os_printf("\nReady\n");
+
+	static ETSTimer some_timer;
+	os_timer_disarm(&some_timer);
+	os_timer_setfn(&some_timer, some_timerfunc, NULL);
+	os_timer_arm(&some_timer, 1 * 60 * 1000, 0); // go to sleep after 1 minute
 }
+
